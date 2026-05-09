@@ -1,0 +1,29 @@
+{
+  "name": "auditglidetest",
+  "version": "1.0.0",
+  "description": "End-to-end test suite for AuditGlide",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:ui": "playwright test --ui",
+    "test:report": "playwright show-report",
+    "test:onboarding": "playwright test tests/onboarding/ --headed",
+    "test:auth": "playwright test tests/auth/",
+    "test:clients": "playwright test tests/clients/",
+    "test:compliance": "playwright test tests/compliance/",
+    "test:cases": "playwright test tests/cases/",
+    "test:core": "playwright test tests/auth/ tests/clients/ tests/compliance/ tests/cases/ tests/work-allocation/",
+    "test:p0": "playwright test --project=chromium --grep @p0",
+    "test:p1": "playwright test tests/access-control/ tests/clients/ tests/compliance/ tests/cases/ tests/work-allocation/ --project=chromium --grep @p1 && playwright test tests/onboarding/onboarding.spec.ts --project=onboarding --grep @p1",
+    "test:smoke": "playwright test --grep @smoke",
+    "codegen": "playwright codegen"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0",
+    "@types/node": "^22.0.0",
+    "dotenv": "^16.4.5",
+    "typescript": "^5.6.0"
+  }
+}

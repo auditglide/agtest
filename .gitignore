@@ -1,0 +1,12 @@
+node_modules/
+dist/
+playwright-report/
+test-results/
+.auth/
+blob-report/
+coverage/
+.env
+.env.local
+*.env
+.DS_Store
+package-lock.json
