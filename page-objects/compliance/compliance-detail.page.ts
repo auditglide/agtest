@@ -130,6 +130,46 @@ export class ComplianceDetailPage extends BasePage {
     }
   }
 
+  async setReceivePayment(enabled: boolean) {
+    const toggle = this.page.getByLabel('Receive Payment', { exact: true }).first();
+    await expect(toggle, 'Receive Payment checkbox must be visible on the compliance detail page').toBeVisible();
+    const checked = await toggle.isChecked();
+    if (checked !== enabled) {
+      await toggle.click();
+    }
+  }
+
+  async expectReceivePaymentChecked(enabled: boolean) {
+    const toggle = this.page.getByLabel('Receive Payment', { exact: true }).first();
+    await expect(toggle, 'Receive Payment checkbox must be visible before checking its state').toBeVisible();
+    if (enabled) {
+      await expect(toggle, 'Receive Payment checkbox must stay enabled').toBeChecked();
+    } else {
+      await expect(toggle, 'Receive Payment checkbox must stay disabled').not.toBeChecked();
+    }
+  }
+
+  async expectReceivePaymentConfiguredPerSubtype() {
+    await expect(
+      this.page.getByText(/Configured per sub type/i),
+      'Parent compliance detail must explain that Receive Payment is configured per subtype',
+    ).toBeVisible();
+  }
+
+  async saveAndHandleReceivePaymentModal(choice: 'apply' | 'new-only' | 'cancel') {
+    await this.saveChanges();
+    await this.expectDialogVisible(/Enable Payment Tracking|Disable Payment Tracking/i);
+    if (choice === 'apply') {
+      await this.clickDialogButton(/Apply to existing open cases|Remove from existing open cases/i);
+      await this.waitForLoadingDone();
+    } else if (choice === 'new-only') {
+      await this.clickDialogButton(/New cases only/i);
+      await this.waitForLoadingDone();
+    } else {
+      await this.clickDialogButton(/Cancel/i);
+    }
+  }
+
   // ─── Schedule editor ──────────────────────────────────────────────────────
 
   /**
@@ -239,6 +279,48 @@ export class ComplianceDetailPage extends BasePage {
 
   async fillSubtypeForm(name: string) {
     await this.fill('input-subtype-name', name);
+  }
+
+  async openEditSubtypeModal(name: string) {
+    const row = this.subtypeRow(name);
+    await expect(row, `Subtype row for "${name}" must be visible before editing`).toBeVisible();
+    await row.locator('[data-testid^="button-edit-subtype-"]').click();
+    await expect(this.page.getByRole('dialog'), 'Edit subtype dialog must open').toBeVisible();
+  }
+
+  async setSubtypeReceivePayment(enabled: boolean) {
+    const dialog = this.page.getByRole('dialog');
+    const toggle = dialog.getByLabel('Receive Payment', { exact: true });
+    await expect(toggle, 'Subtype Receive Payment checkbox must be visible in the subtype dialog').toBeVisible();
+    const checked = await toggle.isChecked();
+    if (checked !== enabled) {
+      await toggle.click();
+    }
+  }
+
+  async expectSubtypeReceivePaymentChecked(enabled: boolean) {
+    const dialog = this.page.getByRole('dialog');
+    const toggle = dialog.getByLabel('Receive Payment', { exact: true });
+    await expect(toggle, 'Subtype Receive Payment checkbox must be visible before checking its state').toBeVisible();
+    if (enabled) {
+      await expect(toggle, 'Subtype Receive Payment checkbox must stay enabled').toBeChecked();
+    } else {
+      await expect(toggle, 'Subtype Receive Payment checkbox must stay disabled').not.toBeChecked();
+    }
+  }
+
+  async submitSubtypeAndHandleReceivePaymentModal(choice: 'apply' | 'new-only' | 'cancel') {
+    await this.submitSubtype();
+    await this.expectDialogVisible(/Enable Payment Tracking|Disable Payment Tracking/i);
+    if (choice === 'apply') {
+      await this.clickDialogButton(/Apply to existing open cases|Remove from existing open cases/i);
+      await this.waitForLoadingDone();
+    } else if (choice === 'new-only') {
+      await this.clickDialogButton(/New cases only/i);
+      await this.waitForLoadingDone();
+    } else {
+      await this.clickDialogButton(/Cancel/i);
+    }
   }
 
   async submitSubtype() {

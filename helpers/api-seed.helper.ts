@@ -35,6 +35,11 @@ export interface SeedCompliance {
   type: string;
 }
 
+export interface SeedBranch {
+  branchId: string;
+  name: string;
+}
+
 export interface SeedCase {
   caseId: string;
 }
@@ -221,9 +226,11 @@ export async function seedClient(
     name,
     pan:               overrides.pan  ?? `AAAAA${String(Date.now()).slice(-4)}A`,
     branchId:          overrides.branchId,
-    complianceTypeIds: overrides.complianceTypeIds ?? [],
     ...overrides,
   };
+  if (overrides.complianceTypeIds === undefined) {
+    delete (body as { complianceTypeIds?: string[] }).complianceTypeIds;
+  }
   const res = await apiCall<{ clientId: string }>('POST', '/clients', token, body);
   return { clientId: res.data.clientId, name };
 }
@@ -236,6 +243,29 @@ export async function deleteClient(token: string, clientId: string): Promise<voi
 
 export async function deactivateClient(token: string, clientId: string): Promise<void> {
   await apiCall('PATCH', `/clients/${clientId}`, token, { isactive: false });
+}
+
+// ─── Branches ────────────────────────────────────────────────────────────────
+
+export async function seedBranch(
+  token: string,
+  overrides: Partial<{ name: string; address: string; state: string; pincode: string }> = {},
+): Promise<SeedBranch> {
+  const name = overrides.name ?? `Test Branch ${Date.now()}`;
+  const res = await apiCall<{ branchId: string }>('POST', '/branches', token, {
+    bname: name,
+    address: overrides.address ?? 'AuditGlide Test Address',
+    state: overrides.state ?? 'MH',
+    pincode: overrides.pincode ?? '400001',
+  });
+  return {
+    branchId: res.data.branchId,
+    name,
+  };
+}
+
+export async function deleteBranch(token: string, branchId: string): Promise<void> {
+  await apiCall('DELETE', `/branches/${branchId}`, token).catch(() => {});
 }
 
 // ─── Compliance types ─────────────────────────────────────────────────────────
@@ -276,6 +306,7 @@ export async function seedComplianceType(
     type: string;
     frequency: 'Monthly' | 'Quarterly' | 'Yearly';
     needsWorkAllocation: boolean;
+    receivePayment: boolean;
     schedule: typeof DEFAULT_MONTHLY_SCHEDULE;
   }> = {},
 ): Promise<SeedCompliance> {
@@ -285,6 +316,7 @@ export async function seedComplianceType(
     type,
     frequency,
     needsWorkAllocation: overrides.needsWorkAllocation ?? false,
+    receivePayment: overrides.receivePayment ?? false,
     schedule: overrides.schedule ?? defaultSchedule(frequency),
   };
 

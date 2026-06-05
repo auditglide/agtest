@@ -58,6 +58,7 @@ export class ComplianceListPage extends BasePage {
     name: string;
     frequency: 'Monthly' | 'Quarterly' | 'Yearly';
     needsWorkAllocation?: boolean;
+    receivePayment?: boolean;
   }) {
     const dialog = this.page.getByRole('dialog');
     await expect(dialog, 'Create compliance dialog must be open before filling').toBeVisible();
@@ -70,6 +71,18 @@ export class ComplianceListPage extends BasePage {
         ? 'Needs Work Allocation'
         : 'No Work Allocation Needed';
       await dialog.getByLabel(label, { exact: true }).check();
+    }
+
+    if (data.receivePayment !== undefined) {
+      const toggle = dialog
+        .locator('p', { hasText: /^Receive Payment$/i })
+        .locator('..')
+        .locator('input[type="checkbox"]')
+        .first();
+      const checked = await toggle.isChecked();
+      if (checked !== data.receivePayment) {
+        await toggle.click();
+      }
     }
   }
 

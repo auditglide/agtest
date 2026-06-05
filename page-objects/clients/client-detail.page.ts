@@ -170,4 +170,42 @@ export class ClientDetailPage extends BasePage {
       `Compliance type "${type}" must NOT appear after removal`,
     ).not.toBeVisible();
   }
+
+  // ─── Payment history ─────────────────────────────────────────────────────
+
+  private paymentHistoryTable() {
+    return this.page.locator('div.bg-white.rounded-xl.border').filter({
+      has: this.page.getByRole('heading', { name: 'Payment History' }),
+    }).locator('table').first();
+  }
+
+  async expectPaymentHistoryVisible() {
+    await expect(
+      this.page.getByRole('heading', { name: 'Payment History' }),
+      'Client detail must show the Payment History section when payment data exists',
+    ).toBeVisible();
+  }
+
+  async expectPaymentHistoryRowVisible(text: string | RegExp) {
+    await expect(
+      this.paymentHistoryTable().getByText(text),
+      `Client payment history must contain "${text}"`,
+    ).toBeVisible();
+  }
+
+  async expectPaymentHistoryReceiptVisible(filename: string) {
+    await expect(
+      this.paymentHistoryTable().locator(`button[title="${filename}"]`).first(),
+      `Client payment history must show a receipt icon titled "${filename}"`,
+    ).toBeVisible();
+  }
+
+  async openPaymentHistoryReceipt(index = 0) {
+    const [popup] = await Promise.all([
+      this.page.waitForEvent('popup'),
+      this.paymentHistoryTable().locator('tbody tr').nth(index).locator('button[title]').first().click(),
+    ]);
+    await popup.waitForLoadState('domcontentloaded').catch(() => {});
+    return popup;
+  }
 }

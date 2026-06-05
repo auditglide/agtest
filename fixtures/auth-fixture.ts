@@ -10,6 +10,8 @@ import { ComplianceListPage }   from '../page-objects/compliance/compliance-list
 import { ComplianceDetailPage } from '../page-objects/compliance/compliance-detail.page';
 import { CaseListPage }         from '../page-objects/cases/case-list.page';
 import { CaseDetailPage }       from '../page-objects/cases/case-detail.page';
+import { TodoPage }             from '../page-objects/todo.page';
+import { PaymentsPage }         from '../page-objects/payments.page';
 import { AUTH_STATE_FILE }      from './global-setup';
 
 const TEST_ADMIN_EMAIL = process.env.TEST_ADMIN_EMAIL ?? '';
@@ -23,6 +25,8 @@ type Fixtures = {
   complianceDetailPage: ComplianceDetailPage;
   caseListPage:        CaseListPage;
   caseDetailPage:      CaseDetailPage;
+  todoPage:            TodoPage;
+  paymentsPage:        PaymentsPage;
 };
 
 export const test = base.extend<Fixtures>({
@@ -60,6 +64,16 @@ export const test = base.extend<Fixtures>({
       'Authenticated shell must be ready before each test',
     ).toBeVisible({ timeout: 15_000 });
 
+    // The "Where are you working from today?" attendance check-in modal pops up
+    // once per session on first authenticated load and overlays the page,
+    // intercepting clicks and hiding content (e.g. the "Filtered by AI" banner).
+    // Dismiss it best-effort so every test starts with a clear page.
+    const skipForNow = page.getByText('Skip for now', { exact: false }).first();
+    if (await skipForNow.isVisible({ timeout: 3_000 }).catch(() => false)) {
+      await skipForNow.click().catch(() => {});
+      await skipForNow.waitFor({ state: 'hidden', timeout: 5_000 }).catch(() => {});
+    }
+
     await use(page);
   },
   loginPage:           async ({ page }, use) => use(new LoginPage(page)),
@@ -69,6 +83,8 @@ export const test = base.extend<Fixtures>({
   complianceDetailPage: async ({ page }, use) => use(new ComplianceDetailPage(page)),
   caseListPage:        async ({ page }, use) => use(new CaseListPage(page)),
   caseDetailPage:      async ({ page }, use) => use(new CaseDetailPage(page)),
+  todoPage:            async ({ page }, use) => use(new TodoPage(page)),
+  paymentsPage:        async ({ page }, use) => use(new PaymentsPage(page)),
 });
 
 export { expect };
