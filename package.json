@@ -18,7 +18,8 @@
     "test:p0": "playwright test --project=chromium --grep @p0",
     "test:p1": "playwright test tests/access-control/ tests/clients/ tests/compliance/ tests/cases/ tests/work-allocation/ --project=chromium --grep @p1 && playwright test tests/onboarding/onboarding.spec.ts --project=onboarding --grep @p1",
     "test:smoke": "playwright test --grep @smoke",
-    "codegen": "playwright codegen"
+    "codegen": "playwright codegen",
+    "test:entitlements": "playwright test tests/entitlements/ --project=chromium"
   },
   "devDependencies": {
     "@playwright/test": "^1.48.0",

@@ -76,7 +76,7 @@ export async function getUserByEmail(email: string): Promise<{
   firmid: string;
   name: string;
 } | null> {
-  const user = await getPrismaClient().user.findUnique({
+  const user = await getPrismaClient().user.findFirst({
     where: { emailid: email },
     select: { userid: true, firmid: true, name: true },
   });
