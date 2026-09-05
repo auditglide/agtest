@@ -435,6 +435,65 @@ export async function setCaseFixtureState(input: {
   });
 }
 
+/**
+ * Stub a GST notice straight into the DB — no scraper / NM service token needed.
+ * Lets the staff-app notices suite assume "all kinds of notices are available".
+ */
+export async function seedNoticeCase(input: {
+  firmId: string;
+  clientId: string;
+  gstin: string;
+  gstCaseId: string;
+  reviewStatus?: 'new' | 'no_action' | 'task_created';
+  noticeDate?: Date | null;
+  latestDueDate?: Date | null;
+  taxPeriods?: string | null;
+  status?: string | null;
+  listType?: string | null;
+  listDescription?: string | null;
+  withDocument?: boolean;
+}): Promise<{ noticeCaseId: string }> {
+  const p = getPrismaClient();
+  const row = await p.gstNoticeCase.create({
+    data: {
+      firmid: input.firmId,
+      clientid: input.clientId,
+      gstin: input.gstin,
+      gst_case_id: input.gstCaseId,
+      review_status: input.reviewStatus ?? 'new',
+      notice_date: input.noticeDate ?? null,
+      latest_due_date: input.latestDueDate ?? null,
+      tax_periods: input.taxPeriods ?? null,
+      status: input.status ?? null,
+      list_type: input.listType ?? null,
+      list_description: input.listDescription ?? null,
+    },
+    select: { noticecaseid: true },
+  });
+  if (input.withDocument) {
+    await p.gstNoticeDocument.create({
+      data: {
+        noticecaseid: row.noticecaseid,
+        firmid: input.firmId,
+        doc_ref: `DOC-${input.gstCaseId}`,
+        tab: 'NOTICES',
+        type: 'Notice',
+        description: 'Stubbed notice document',
+      },
+    });
+  }
+  return { noticeCaseId: row.noticecaseid };
+}
+
+/**
+ * Remove every GST notice (and, via FK cascade, its notice tasks / notes / documents /
+ * time logs / attachments) for a GSTIN. Used by the notices E2E suite to keep seeded
+ * tasks from accumulating in the admin's To-Do across runs.
+ */
+export async function cleanupNoticesForGstin(gstin: string): Promise<void> {
+  await getPrismaClient().gstNoticeCase.deleteMany({ where: { gstin } }).catch(() => {});
+}
+
 export async function disconnectTestDb(): Promise<void> {
   if (!prisma) {
     return;

@@ -40,12 +40,12 @@ export const test = base.extend<Fixtures>({
     await page.waitForLoadState('domcontentloaded');
 
     await Promise.race([
-      page.getByTestId('button-user-menu').waitFor({ state: 'visible', timeout: 8_000 }).catch(() => {}),
+      page.locator('[data-testid="button-user-menu"]:visible').first().waitFor({ state: 'visible', timeout: 8_000 }).catch(() => {}),
       page.getByTestId('input-email').waitFor({ state: 'visible', timeout: 8_000 }).catch(() => {}),
     ]);
 
     const hasAuthenticatedShell =
-      await page.getByTestId('button-user-menu').isVisible().catch(() => false);
+      await page.locator('[data-testid="button-user-menu"]:visible').first().isVisible().catch(() => false);
 
     if (!hasAuthenticatedShell) {
       await page.context().clearCookies();
@@ -60,7 +60,7 @@ export const test = base.extend<Fixtures>({
       await page.context().storageState({ path: AUTH_STATE_FILE });
     }
     await expect(
-      page.getByTestId('button-user-menu'),
+      page.locator('[data-testid="button-user-menu"]:visible').first(),
       'Authenticated shell must be ready before each test',
     ).toBeVisible({ timeout: 15_000 });
 

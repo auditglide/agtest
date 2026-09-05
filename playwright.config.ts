@@ -40,6 +40,7 @@ export default defineConfig({
     // All tests depend on the setup project
     {
       name: 'chromium',
+      testIgnore: /tests\/agadmin\//,   // agadmin is a separate app with its own login (see the 'agadmin' project)
       use: {
         ...devices['Desktop Chrome'],
         storageState: AUTH_STATE_FILE,
@@ -50,6 +51,12 @@ export default defineConfig({
     {
       name: 'onboarding',
       testMatch: /onboarding\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'] },
+    },
+    // Ops admin app (agadmin, :3100) — standalone, its own login, no staff auth/storageState/setup dep.
+    {
+      name: 'agadmin',
+      testMatch: /tests\/agadmin\/.*\.spec\.ts/,
       use: { ...devices['Desktop Chrome'] },
     },
   ],
