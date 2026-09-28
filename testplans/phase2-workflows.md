@@ -18,8 +18,9 @@ Written the way a CA would actually work: pick a client, pick a month, and follo
 | Dev app | `https://devapp.auditglide.com` |
 | Ops admin | `https://admin.auditglide.com` |
 
-Use a login on **Selvaraj & Co Auditors** for most of this. It has ten clients with real returns
-already stored, so most screens have something to show without waiting on the portal.
+Ask whoever runs the environment for a login, and for **one firm on each of the two routes below**.
+You need both. For most of these workflows you also want a client with a few months of returns already
+stored, so the screen has something to show without waiting on the portal.
 
 ### The one idea behind all of it
 
@@ -35,13 +36,19 @@ telling a CA their client is fine. Watch for that everywhere.
 
 ### Two routes, two different waits
 
-- **Selvaraj & Co Auditors** reads through the office PC. Asking for data queues a job and the answer
-  comes back **about a minute later**, and only while that PC is on.
-- **ConnectorTest** and **SOTOWORX** read through the paid API. That needs the client to read out a
-  **one-time password**, and then data comes back straight away.
+Every firm is on one of two routes, and the wait is the difference:
 
-You want to see both. The wording on screen should never tell you which is which, and that is
-deliberate: a CA only needs to know whether something is needed from them right now.
+| | The office-PC route | The OTP route |
+|---|---|---|
+| What it is | A program on the firm's own PC that signs in to the portal | A paid API we call from our server |
+| What it needs | That PC switched on | The client to read out a one-time password, good for six hours |
+| How long | Asking **queues a job**. The answer lands **about a minute later** | Straight away, in the same click |
+| What you should see while waiting | "Reading... it takes about a minute, and this page will fill itself in" | Nothing; the data is just there |
+| OTP button | Never offered, because there is no OTP on this route | Offered on the page |
+
+**You want to see both, and the screens differ only in that wait.** Ask ops which firm is which. The
+wording on screen should never tell you, and that is deliberate: a CA only needs to know whether
+something is needed from them right now, not which pipe the data came down.
 
 ### Keep the Network tab open
 
@@ -92,9 +99,10 @@ the page, **Inspect**, then the **Network** tab, then click **Fetch/XHR**. Leave
 
 > It opens that client's ledgers. Workflow 2 carries on from here.
 
-**On dev today:** no ledger has ever been pulled, so expect every row to read "Could not read" and the
-counters to show 0, 0, 0, ₹0 and 54. That is the correct display of an honest nothing. To see real
-figures you need workflow 3.
+**If no ledger has ever been read on your environment**, expect every row to read "Could not read",
+every figure to be a dash, and the flag counters to be zero with a real count under "Could not read".
+That is the correct display of an honest nothing, and it is worth seeing once. To get real figures,
+do workflow 3 first.
 
 ---
 
@@ -152,9 +160,10 @@ figures you need workflow 3.
 
 ## Workflow 3: getting a live session and pulling real data
 
-*Needed for the ledgers, e-invoice and DRC screens, which have no stored data on dev.*
+*Needed for the ledgers, e-invoice and DRC screens, which on most environments have nothing stored
+yet because nothing has ever pulled them.*
 
-### 3a. The OTP route (ConnectorTest or SOTOWORX)
+### 3a. The OTP route
 
 **Step 1.** Open any screen that needs portal data. The session panel is on the page itself.
 
@@ -175,10 +184,10 @@ figures you need workflow 3.
 > You should get a plain sentence, for example "That OTP didn't match. Re-enter it, or resend a new one."
 > You should never see a raw error from the provider.
 
-### 3b. The office-PC route (Selvaraj)
+### 3b. The office-PC route
 
-**Step 1.** Make sure the connector is running on the paired PC. In ops admin, **Connector logs** shows
-each firm's machines and when each was last seen.
+**Step 1.** Make sure the program is running on that firm's paired PC. In ops admin, **Connector logs**
+shows each firm's machines and when each was last seen.
 
 **Step 2.** Open a client's ledgers and press **Sync**.
 
@@ -210,8 +219,9 @@ each firm's machines and when each was last seen.
 
 **Step 1.** Open a client's ledgers and choose the last tab, **Liability & ITC comparison**.
 
-Use **CALYPSO FERTILIZERS** (40 months stored), **SRI ANNAMAR FIBRES** (28) or **KARIKALI AMMAN
-TRADERS** (27). This tab works from stored returns, so it needs no portal session.
+Pick a client with several months of GSTR-1 and GSTR-3B already stored. **This tab works entirely from
+stored returns, so it needs no portal session at all**, which makes it the easiest thing here to test
+properly.
 
 **Step 2.** Read the four counters.
 
@@ -244,8 +254,8 @@ TRADERS** (27). This tab works from stored returns, so it needs no portal sessio
 > - **Panel saying not checked:** we have not read the list at all.
 >
 > **Test the difference between the last two hardest.** "We looked and there is nothing" and "we have
-> not looked" must never be shown as each other. On dev today it should say **not checked**, because no
-> DRC list has ever been read.
+> not looked" must never be shown as each other. On an environment where no DRC list has ever been
+> read, it must say **not checked**.
 
 ---
 
@@ -255,8 +265,9 @@ TRADERS** (27). This tab works from stored returns, so it needs no portal sessio
 
 **Step 1.** RECONCILIATION → **Purchase vs 2A / 2B**.
 
-**Step 2.** Pick **SHRI RAJESHWARI BUILDERS** and a month it has, for example **Jul 2024** or
-**Apr 2026**. It has 321 supplier invoices over 16 months and 11 credit notes, so there is plenty to see.
+**Step 2.** Pick a client and a month with a decent number of supplier invoices. A month with only two
+or three invoices will not exercise the buckets, the reasons or the supplier view. Credit notes and
+imports in the month are a bonus: both have their own handling.
 
 **Step 3.** If no purchase register exists for that month, click **Import register**.
 
@@ -346,9 +357,11 @@ TRADERS** (27). This tab works from stored returns, so it needs no portal sessio
 > The decisions you made must still be there. They are kept against the document, not against a row
 > number, so re-reading a file never throws away work somebody did by hand.
 
-**On dev today:** not one of the 84 stored GSTR-2Bs contains an ISD entry, so the portal side will be
-empty for every client. You can still test the whole books side, the import, and the "in books only"
-status. Everything will read "in books only", and that is correct.
+**ISD credit is genuinely rare.** Most clients have none, and on many environments no stored GSTR-2B
+contains a single ISD entry. When that is the case the portal side is empty for every client, every row
+reads "in books only", and **that is correct**. You can still test the whole books side, the import and
+the decisions. Only a client whose head office actually distributes credit will show the other four
+statuses, so ask before assuming the screen is broken.
 
 ---
 
@@ -484,37 +497,38 @@ word **Whitebooks**. Then for **Connector**.
 
 ---
 
-## Appendix A: test data on dev, at a glance
+## Appendix A: choosing what to test with
 
-### Firms
+Ask whoever runs the environment for these three things, rather than guessing:
 
-| Firm | Route | Clients with data |
-|---|---|---|
-| Selvaraj & Co Auditors | office PC | 10 |
-| ConnectorTest | OTP | 3 |
-| SOTOWORX | OTP | 1 |
+1. **A firm on each route.** The office-PC one and the OTP one. Half of Phase 2 behaves differently
+   between them, and testing only one leaves the other untested.
+2. **A client with a few months of returns already stored.** Purchase reconciliation and the liability
+   and ITC comparison both work from stored returns and need no portal session, so these are the two you
+   can test most thoroughly and should test first.
+3. **A live portal session**, when you get to the ledgers, e-invoices or DRC intimations. Those three
+   are new, so on most environments nothing has ever pulled them and they will honestly report that they
+   have not been read.
 
-### Selvaraj clients worth using
+### What "empty" means, and which one is a bug
 
-| Client | Stored | Best for |
-|---|---|---|
-| SHRI RAJESHWARI BUILDERS | 321 invoices, 16 months, 11 credit notes | Purchase reconciliation |
-| CALYPSO FERTILIZERS | 172 invoices, 40 months, 11 imports, 3 credit notes | Purchase reco, comparison tab |
-| SRI ANNAMAR FIBRES | 28 months of GSTR-1 and 3B | Comparison tab |
-| KARIKALI AMMAN TRADERS | 27 months of GSTR-1 and 3B | Comparison tab |
-| STARLINE TRANSPORT, SHREE CABLE VISION | Apr to Jul 2026 | Quick runs |
-| AMMAN AGENCIES | 5 months of 2B, none with invoices | The honest-empty case |
+| What you see | What it is |
+|---|---|
+| Nil, or "no entries", saying it read the portal | The client genuinely has nothing. Fine |
+| "Could not read", with a dash | We have never looked, or the read failed. Fine, and correct |
+| "Reading... about a minute" | A job is queued on the office-PC route. Fine |
+| A figure, usually 0, for something nobody looked at | **A bug. Raise it straight away** |
 
-### What is not there, and why
+### Things that are rare, and so look like bugs
 
 | | |
 |---|---|
-| ISD credit | Not one of the 84 stored GSTR-2Bs has an ISD entry |
-| Any ledger | No ledger has ever been pulled for any client |
-| E-invoices, DRC intimations | Same |
+| ISD credit | Most clients have none. An empty head-office credit screen is usually correct |
+| Blocked credit under Rule 86A | Rare. It only exists after an officer has blocked credit |
+| Negative liability | Largely a composition-scheme thing, and rare for a regular filer |
+| Credit reversal and re-claimed | Needs a client who has actually reversed credit |
 
-Those three need one live portal session to test with real figures. Everything else works from what is
-already stored.
+If you cannot find a client with one of those, mark the line **blocked** rather than pass or fail.
 
 ---
 

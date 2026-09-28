@@ -85,7 +85,7 @@ const FOOTER = `
 
 const only = process.argv[2];
 const files = readdirSync(here)
-  .filter((f) => f.endsWith('.md'))
+  .filter((f) => f.endsWith('.md') && f !== 'README.md')   // the README explains the folder; it is not a plan
   .filter((f) => !only || basename(f, '.md') === only);
 
 if (files.length === 0) {

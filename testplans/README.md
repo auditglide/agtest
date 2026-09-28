@@ -21,7 +21,13 @@ Commit the `.md` and the regenerated `.pdf` together, or the two drift apart and
 a stale printout.
 
 `- [ ] something` becomes a real tick box in the PDF. A `>` quote becomes the tinted "what you should
-see" panel that the workflow guide leans on.
+see" panel that the workflow guide leans on. `README.md` is skipped by the renderer.
+
+## No firm or client names
+
+Deliberate. These plans name no firm and no client, on any environment. What a tester needs is the
+BEHAVIOUR of the two routes, which is the same everywhere, plus a line telling them to ask for a login
+and some data. Names go stale, differ between environments, and end up in a document that gets shared.
 
 ## Why the PDFs are in `pdf/` and not `dist/`
 

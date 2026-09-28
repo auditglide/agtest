@@ -47,26 +47,25 @@ You need to test both. Which route a firm is on is set by ops.
 words. Seeing either one in the app, a message or a toast is a bug, every time. Same for any screen
 that tries to explain the difference to a CA.
 
-### Test data on dev
+### Picking a firm and a client to test with
 
-| Firm | Route | Use it for |
-|---|---|---|
-| Selvaraj & Co Auditors | Connector | most things; 10 clients with returns already stored |
-| ConnectorTest | Whitebooks | the OTP path, 3 clients |
-| SOTOWORX | Whitebooks | 1 client |
+Ask whoever runs the environment which firms are on which route, and **test both**. You want at least
+one firm of each.
 
-Clients worth knowing on Selvaraj:
+For a client, you want one with a few months of returns already stored, so the screen has something to
+show without waiting on the portal. A client with nothing stored is worth testing too, but test it
+knowingly: that is the "we have not looked yet" case, not a failure.
 
-| Client | What it has |
+When a screen is empty, work out which of these three it is before raising anything:
+
+| | How to tell |
 |---|---|
-| SHRI RAJESHWARI BUILDERS | 321 supplier invoices over 16 months, 11 credit notes. Best for purchase reconciliation |
-| CALYPSO FERTILIZERS | 172 invoices over 40 months, 11 import entries, 3 credit notes |
-| SRI ANNAMAR FIBRES | 28 months of GSTR-1 and 3B. Good for the comparison tab |
-| KARIKALI AMMAN TRADERS | 27 months of GSTR-1 and 3B |
-| STARLINE TRANSPORT, SHREE CABLE VISION | Apr to Jul 2026 only, small and quick |
+| The client genuinely has nothing | The screen says nil, or no entries, and says it read the portal |
+| We have never looked | The screen says so, and offers a way to read it |
+| It is on its way | The screen says it is reading and that it takes about a minute |
 
-**No client on dev has any ISD credit, and no ledger has ever been pulled.** That is not a bug, it is
-where we are. See *Known gaps* at the end before raising anything.
+Any of those three is fine. What is a bug is a fourth thing: a figure, usually a zero, shown for
+something nobody looked at.
 
 ---
 
@@ -412,16 +411,18 @@ correct behaviour**. If the message is missing, or a zero shows instead, THAT is
 Also on that route: it needs the office PC switched on, and it answers about a minute later rather
 than immediately.
 
-### Dev data gaps
+### Gaps in the environment, rather than in the product
 
-| What you will find | Why |
-|---|---|
-| No client has any ISD credit | Not one of the 84 stored GSTR-2Bs contains an ISD entry. The ISD screen will show an empty portal side for every client |
-| No ledger has ever been pulled | The six ledger tabs will all say "could not read" until somebody does a live sync |
-| No e-invoice or DRC data | Same reason |
+Some screens will have nothing to show simply because nobody has read that data from the portal yet on
+the environment you are testing. The ledgers, e-invoices and DRC intimations are the usual ones, since
+they are new and nothing has pulled them before.
 
-To test those three properly you need one live portal session: either an OTP on a Whitebooks client,
-or the Selvaraj office PC switched on.
+That is a **blocked** test, not a failure. To unblock it you need one live portal session on that
+client: either an OTP on a firm that uses the OTP route, or the office PC switched on for a firm that
+uses that route.
+
+Say which client and month you tried when you mark something blocked, so somebody can either find you
+data or tell you it cannot exist.
 
 ---
 
